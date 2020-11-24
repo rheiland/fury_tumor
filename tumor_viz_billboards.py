@@ -12,7 +12,7 @@ def argviz(thr_1, thr_2, centers, axis):
     return cond1 & cond2
 
 
-def build_label(text, font_size=18, bold=False):
+def build_label(text, font_size=14, bold=False):
     label = ui.TextBlock2D()
     label.message = text
     label.font_size = font_size
@@ -65,12 +65,13 @@ def update_opacities(verts_per_sph=4):
     vis = [255] * verts_per_sph
     inv = [0] * verts_per_sph
     inds = ind_x | ind_y | ind_z
-    for ind in inds:
+    for i, ind in enumerate(inds):
         if ind:
             opacities.extend(vis)
         else:
             opacities.extend(inv)
     opacities = np.array(opacities)
+    opacities = np.ascontiguousarray(opacities)
     spheres_colors[:, 3] = opacities
     colors_array.Modified()
 
@@ -98,6 +99,7 @@ if __name__ == '__main__':
     xyz[:, 0] = mcds.data['discrete_cells']['position_x']
     xyz[:, 1] = mcds.data['discrete_cells']['position_y']
     xyz[:, 2] = mcds.data['discrete_cells']['position_z']
+    #xyz = xyz[:1000]
 
     np.random.seed(42)
     rgb = np.random.rand(xyz.shape[0], 3)
@@ -109,6 +111,7 @@ if __name__ == '__main__':
 
     cell_radii = mcds.data['discrete_cells']['total_volume'] * .75 / np.pi
     cell_radii = np.cbrt(cell_radii)
+    #cell_radii = cell_radii[:1000]
 
     cell_type = mcds.data['discrete_cells']['cell_type']
     print(cell_type)
@@ -120,18 +123,17 @@ if __name__ == '__main__':
 
     fake_sphere = \
         """
-        float transparency = vertexColorVSOutput.a;
+        if(opacity == 0)
+            discard;
         float len = length(point);
         float radius = 1.;
-        if(len > radius) {
+        if(len > radius)
             discard;
-        }
-
         vec3 normalizedPoint = normalize(vec3(point.xy, sqrt(1. - len)));
         vec3 direction = normalize(vec3(1., 1., 1.));
         float df_1 = max(0, dot(direction, normalizedPoint));
         float sf_1 = pow(df_1, 24);
-        fragOutput0 = vec4(max(df_1 * color, sf_1 * vec3(1)), transparency);
+        fragOutput0 = vec4(max(df_1 * color, sf_1 * vec3(1)), 1);
         """
 
     global spheres_actor
@@ -139,12 +141,12 @@ if __name__ == '__main__':
                                     fs_impl=fake_sphere)
     scene.add(spheres_actor)
 
-    show_m = window.ShowManager(scene, size=(1200, 900),
-                                order_transparent=True, reset_camera=False)
+    show_m = window.ShowManager(scene, reset_camera=False,
+                                order_transparent=True, max_peels=0)
     show_m.initialize()
 
     global panel
-    panel = ui.Panel2D((420, 240), position=(760, 20), color=(1, 1, 1),
+    panel = ui.Panel2D((256, 144), position=(40, 5), color=(1, 1, 1),
                        opacity=.1, align='right')
 
     thr_x1 = np.percentile(xyz[:, 0], 50)
@@ -153,8 +155,9 @@ if __name__ == '__main__':
     ind_x = argviz(thr_x1, thr_x2, xyz, 0)
     slider_clipping_plane_label_x = build_label('X Clipping Plane')
     slider_clipping_plane_thrs_x = ui.LineDoubleSlider2D(
+        line_width=3, outer_radius=5, length=115,
         initial_values=(thr_x1, thr_x2), min_value=min_xyz[0],
-        max_value=max_xyz[0], text_template="{value:.0f}")
+        max_value=max_xyz[0], font_size=12, text_template="{value:.0f}")
 
     thr_y1 = np.percentile(xyz[:, 1], 50)
     thr_y2 = max_xyz[1]
@@ -162,8 +165,9 @@ if __name__ == '__main__':
     ind_y = argviz(thr_y1, thr_y2, xyz, 1)
     slider_clipping_plane_label_y = build_label('Y Clipping Plane')
     slider_clipping_plane_thrs_y = ui.LineDoubleSlider2D(
+        line_width=3, outer_radius=5, length=115,
         initial_values=(thr_y1, thr_y2), min_value=min_xyz[1],
-        max_value=max_xyz[1], text_template="{value:.0f}")
+        max_value=max_xyz[1], font_size=12, text_template="{value:.0f}")
 
     thr_z1 = np.percentile(xyz[:, 2], 50)
     thr_z2 = max_xyz[2]
@@ -171,8 +175,9 @@ if __name__ == '__main__':
     ind_z = argviz(thr_z1, thr_z2, xyz, 2)
     slider_clipping_plane_label_z = build_label('Z Clipping Plane')
     slider_clipping_plane_thrs_z = ui.LineDoubleSlider2D(
+        line_width=3, outer_radius=5, length=115,
         initial_values=(thr_z1, thr_z2), min_value=min_xyz[2],
-        max_value=max_xyz[2], text_template="{value:.0f}")
+        max_value=max_xyz[2], font_size=12, text_template="{value:.0f}")
 
     update_opacities()
 
@@ -180,12 +185,12 @@ if __name__ == '__main__':
     slider_clipping_plane_thrs_y.on_change = change_clipping_plane_y
     slider_clipping_plane_thrs_z.on_change = change_clipping_plane_z
 
-    panel.add_element(slider_clipping_plane_label_x, (.05, .8))
-    panel.add_element(slider_clipping_plane_thrs_x, (.45, .8))
-    panel.add_element(slider_clipping_plane_label_y, (.05, .5))
-    panel.add_element(slider_clipping_plane_thrs_y, (.45, .5))
-    panel.add_element(slider_clipping_plane_label_z, (.05, .2))
-    panel.add_element(slider_clipping_plane_thrs_z, (.45, .2))
+    panel.add_element(slider_clipping_plane_label_x, (.01, .85))
+    panel.add_element(slider_clipping_plane_thrs_x, (.48, .85))
+    panel.add_element(slider_clipping_plane_label_y, (.01, .55))
+    panel.add_element(slider_clipping_plane_thrs_y, (.48, .55))
+    panel.add_element(slider_clipping_plane_label_z, (.01, .25))
+    panel.add_element(slider_clipping_plane_thrs_z, (.48, .25))
 
     scene.add(panel)
 
