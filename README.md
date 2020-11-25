@@ -14,3 +14,5 @@ To run `tumor_viz_billboards.py` the dev version of fury is required. To install
 $ python tumor_vis2.py
 ```
 ![](/images/tumor_vis2_med.png)
+
+Compare with https://www.youtube.com/watch?v=nJ2urSm4ilU&list=PL1IHi3Kb0zyn-HBXeMBLjTU_-rFEKqFKM&index=2 at about 15 secs into the video.
