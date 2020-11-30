@@ -88,7 +88,7 @@ def win_callback(obj, event):
 
 if __name__ == '__main__':
     # mcds = pyMCDS_cells('output00000001.xml', '.')  # 23123 cells
-    mcds = pyMCDS_cells('output00000246.xml', '.')  # 23123 cells
+    mcds = pyMCDS_cells('output00000246.xml', '.')  
     print('time=', mcds.get_time())
 
     print(mcds.data['discrete_cells'].keys())
