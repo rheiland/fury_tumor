@@ -55,11 +55,7 @@ def update_opacities(verts_per_sph=4):
     global ind_x, ind_y, ind_z, spheres_actor
     mapper = spheres_actor.GetMapper()
     pnt_data = mapper.GetInput().GetPointData()
-    pnt_arrays = pnt_data.GetNumberOfArrays()
-    colors_array = None
-    for i in range(pnt_arrays):
-        if pnt_data.GetArray(i).GetName() == 'colors':
-            colors_array = pnt_data.GetArray(i)
+    colors_array = pnt_data.GetArray('colors')
     spheres_colors = numpy_support.vtk_to_numpy(colors_array)
     opacities = []
     vis = [255] * verts_per_sph

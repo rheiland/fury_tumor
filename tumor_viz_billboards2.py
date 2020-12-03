@@ -55,23 +55,18 @@ def update_opacities(verts_per_sph=4):
     global ind_x, ind_y, ind_z, spheres_actor
     mapper = spheres_actor.GetMapper()
     pnt_data = mapper.GetInput().GetPointData()
-    pnt_arrays = pnt_data.GetNumberOfArrays()
-    colors_array = None
-    for i in range(pnt_arrays):
-        if pnt_data.GetArray(i).GetName() == 'colors':
-            colors_array = pnt_data.GetArray(i)
+    colors_array = pnt_data.GetArray('colors')
     spheres_colors = numpy_support.vtk_to_numpy(colors_array)
     opacities = []
     vis = [255] * verts_per_sph
     inv = [0] * verts_per_sph
-    inds = ind_x | ind_y | ind_z
+    inds = ind_x & ind_y & ind_z
     for i, ind in enumerate(inds):
         if ind:
             opacities.extend(vis)
         else:
             opacities.extend(inv)
     opacities = np.array(opacities)
-    opacities = np.ascontiguousarray(opacities)
     spheres_colors[:, 3] = opacities
     colors_array.Modified()
 
@@ -100,15 +95,12 @@ if __name__ == '__main__':
     xyz[:, 0] = mcds.data['discrete_cells']['position_x']
     xyz[:, 1] = mcds.data['discrete_cells']['position_y']
     xyz[:, 2] = mcds.data['discrete_cells']['position_z']
-    #xyz = xyz[:1000]
 
-    np.random.seed(42)
-    # rgb = np.random.rand(xyz.shape[0], 3)
-    rgb = np.zeros((ncells,3))
+    rgb = np.zeros((ncells, 3))
     # default color: yellow
-    rgb[:,0] = 1
-    rgb[:,1] = 1
-    rgb[:,2] = 0
+    rgb[:, 0] = 1
+    rgb[:, 1] = 1
+    rgb[:, 2] = 0
     cell_phase = mcds.data['discrete_cells']['current_phase']
     # cell_phase = cell_phase[idx_keep]
 
@@ -121,37 +113,41 @@ if __name__ == '__main__':
     onco = mcds.data['discrete_cells']['oncoprotein']
     # onco = onco[idx_keep]
     onco_min = onco.min()
-    print('onco min, max= ',onco.min(),onco.max())
+    print('onco min, max= ', onco.min(), onco.max())
     onco_range = onco.max() - onco.min()
 
-    print('cell_phase min, max= ',cell_phase.min(),cell_phase.max())  # e.g., 14.0 100.0
+    # e.g., 14.0 100.0
+    print('cell_phase min, max= ', cell_phase.min(), cell_phase.max())
 
-    # This coloring is only approximately correct, but at least it shows variation in cell colors
+    # This coloring is only approximately correct, but at least it shows
+    # variation in cell colors
     for idx in range(ncells):
         if cell_type[idx] == 1:
-            rgb[idx,0] = 1
-            rgb[idx,1] = 1
-            rgb[idx,2] = 0
-            # self.yval1 = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 1) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100) == True)) for idx in range(ds_count)] )
+            rgb[idx, 0] = 1
+            rgb[idx, 1] = 1
+            rgb[idx, 2] = 0
+            #self.yval1 = np.array([(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 1) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100) == True)) for idx in range(ds_count)] )
         if cycle_model[idx] < 100:
-            # rgb[idx,0] = 0.5
-            # rgb[idx,1] = 0.5
-            rgb[idx,0] = 1.0 - (onco[idx] - onco_min)/onco_range
+            # rgb[idx, 0] = 0.5
+            # rgb[idx, 1] = 0.5
+            rgb[idx, 0] = 1.0 - (onco[idx] - onco_min)/onco_range
             # rgb[idx,1] = (onco[idx] - onco_min)/onco_range
-            rgb[idx,1] = rgb[idx,0]
-            rgb[idx,2] = 0
+            rgb[idx, 1] = rgb[idx, 0]
+            rgb[idx, 2] = 0
         elif cycle_model[idx] == 100:
-            rgb[idx,0] = 1
-            rgb[idx,1] = 0
-            rgb[idx,2] = 0
+            rgb[idx, 0] = 1
+            rgb[idx, 1] = 0
+            rgb[idx, 2] = 0
         elif cycle_model[idx] > 100:
-            rgb[idx,0] = 0.54   # 139./255
-            rgb[idx,1] = 0.27   # 69./255
-            rgb[idx,2] = 0.075  # 19./255
-#----------------------
+            rgb[idx, 0] = 0.54   # 139./255
+            rgb[idx, 1] = 0.27   # 69./255
+            rgb[idx, 2] = 0.075  # 19./255
 
     colors = np.ones((xyz.shape[0], 4))
     colors[:, :-1] = rgb
+    #colors = colors[:1000]
+
+    #xyz = xyz[:1000]
 
     min_xyz = np.min(xyz, axis=0)
     max_xyz = np.max(xyz, axis=0)
